@@ -8,6 +8,7 @@ namespace MessageLogger.Model
 {
     public class Message
     {
+        public int Id { get; set; }
         public string Content { get; private set; }
         public DateTime CreatedAt { get; private set; }
 
