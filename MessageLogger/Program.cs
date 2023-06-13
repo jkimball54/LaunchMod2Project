@@ -55,8 +55,10 @@ using (var context = new MessageLoggerContext())
 
     }
     Prompt.Outro(context);
+    Prompt.UsersOrderedByMessageCount(context);
+    Prompt.MostCommonWord(context, 5);
+    Prompt.HourOfMostMessages(context);
 }
-
 
 static User CreateUser(MessageLoggerContext context)
 {

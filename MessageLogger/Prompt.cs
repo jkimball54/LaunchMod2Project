@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -40,6 +41,7 @@ namespace MessageLogger
         }
         public static void Outro(MessageLoggerContext context)
         {
+            Console.WriteLine("Thanks for using Message Logger!");
             foreach (var u in context.Users.Include(u => u.Messages)) //in context instead
             {
                 Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
@@ -59,6 +61,79 @@ namespace MessageLogger
             foreach(var message in userAll.Messages)
             {
                 Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
+            }
+        }
+        public static void UsersOrderedByMessageCount(MessageLoggerContext context)
+        {
+            Console.WriteLine("Users Ordered by Message Count");
+            var userAll = context.Users.Include(u => u.Messages).OrderByDescending(u => u.Messages.Count);
+            foreach(var u in userAll)
+            {
+                Console.WriteLine($"{u.Username}: {u.Messages.Count}");
+            }
+        }
+        public static void MostCommonWord(MessageLoggerContext context, int minUsageNum)
+        {
+            List<string> allMessageStrings = context.Messages.Select(m => m.Content).ToList();
+            List<string> singleWordList = new List<string>();
+            foreach(string messageString in allMessageStrings)
+            {
+                var splitString = messageString.Split(" ");
+                singleWordList.AddRange(splitString);
+            }
+            Console.WriteLine("Most Commonly used word");
+            foreach(string word in singleWordList.Distinct())
+            {
+                if(singleWordList.Where(w => w == word).Count() < minUsageNum)
+                {
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"'{word}' occurs {singleWordList.Where(w => w == word).Count()} times.");
+                }
+            }
+            
+        }
+
+        //I am not a fan of everything beyond this point
+        public static void HourOfMostMessages(MessageLoggerContext context)
+        {
+            //count messages that occur between range of time (1 hour)
+            //move through each hour from first occurance to last occurence
+            Console.WriteLine("Hour of the Most Messages");
+            //for loop
+            var lastEverMessageHour = context.Messages.Max(m => m.CreatedAt.Hour) + 1;
+            for(var firstEverMessageHour = context.Messages.Min(m => m.CreatedAt.Hour); firstEverMessageHour < lastEverMessageHour; firstEverMessageHour++)
+            {
+                //var firstHour
+                var firstHour = firstEverMessageHour;
+                //var NextHour
+                var nextHour = firstEverMessageHour + 1;
+                //var totalMessages = context.Messages.Where(m.Date => m.Date < nextHour && m.Date >= firstHour).Count();
+                var totalMessages = context.Messages.Where(m => m.CreatedAt.Hour < nextHour && m.CreatedAt.Hour >= firstHour).Count();
+                Console.WriteLine($"{TwelveHourTime(firstHour)}: {totalMessages}");
+            }
+
+        }
+        public static string TwelveHourTime(int hour)
+        {
+            if(hour < 12)
+            {
+                return $"{hour} AM";
+            }
+            else if(hour == 12)
+            {
+                return $"{hour} PM";
+            }
+            else if(hour == 0)
+            {
+                return $"{hour} AM";
+            }
+            else
+            {
+                hour = hour - 12;
+                return $"{hour} PM";
             }
         }
     }
