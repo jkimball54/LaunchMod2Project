@@ -55,7 +55,8 @@ using (var context = new MessageLoggerContext())
 
     }
     Prompt.Outro(context);
-    Prompt.Stats(context);
+    Prompt.UsersOrderedByMessageCount(context);
+    Prompt.MostCommonWord(context, 5);
 }
 
 

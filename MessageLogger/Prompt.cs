@@ -62,7 +62,7 @@ namespace MessageLogger
                 Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
             }
         }
-        public static void Stats(MessageLoggerContext context)
+        public static void UsersOrderedByMessageCount(MessageLoggerContext context)
         {
             Console.WriteLine("Users Ordered by Message Count");
             var userAll = context.Users.Include(u => u.Messages).OrderByDescending(u => u.Messages.Count);
@@ -70,8 +70,34 @@ namespace MessageLogger
             {
                 Console.WriteLine($"{u.Username}: {u.Messages.Count}");
             }
-            Console.WriteLine("Most Commonly used word");
-            Console.WriteLine("The Hour with the most messages");
         }
+        public static void MostCommonWord(MessageLoggerContext context, int minUsageNum)
+        {
+            List<string> allMessageStrings = context.Messages.Select(m => m.Content).ToList();
+            List<string> singleWordList = new List<string>();
+            foreach(string messageString in allMessageStrings)
+            {
+                var splitString = messageString.Split(" ");
+                singleWordList.AddRange(splitString);
+            }
+            Console.WriteLine("Most Commonly used word");
+            foreach(string word in singleWordList.Distinct())
+            {
+                if(singleWordList.Where(w => w == word).Count() < minUsageNum)
+                {
+                    continue;
+                }
+                else
+                {
+                    Console.WriteLine($"'{word}' occurs {singleWordList.Where(w => w == word).Count()} times.");
+                }
+            }
+            
+        }
+        public static void HourOfMostMessages()
+        {
+
+        }
+
     }
 }
