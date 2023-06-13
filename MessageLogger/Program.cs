@@ -6,12 +6,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Npgsql.Replication;
+using Spectre.Console;
 
 
 
 //Wrap in using statement to create db connection
 using (var context = new MessageLoggerContext())
 {
+    
     Prompt.Output("welcome");
     User user = null;
     string userInput = "log out";
@@ -74,18 +76,14 @@ static User CreateUser(MessageLoggerContext context)
 }
 static User ExistingUser(MessageLoggerContext context)
 {
-    Prompt.DisplayUsers(context);
-    Console.Write("What is your username? ");
-    string username = Console.ReadLine();
     User user = null;
-    foreach (var existingUser in context.Users)
-    {
-        if (existingUser.Username == username)
-        {
-            user = existingUser;
-        }
-    }
-    return user;
+    var username = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Please select a [red]User to Login[/].")
+        .PageSize(context.Users.Count())
+        .MoreChoicesText("[grey](Move up and down to reveal more users)[/]")
+        .AddChoices(context.Users.Select(u => u.Username).ToList()));
+    return context.Users.Single(u => u.Username == username);
 }
 static string AddMessage(MessageLoggerContext context, User user, string userInput)
 {
