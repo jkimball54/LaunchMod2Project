@@ -1,86 +1,99 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using MessageLogger;
+using MessageLogger.Data;
 using MessageLogger.Model;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
+using Npgsql.Replication;
 
-Console.WriteLine("Welcome to Message Logger!");
-Console.WriteLine();
-Console.WriteLine("Let's create a user pofile for you.");
-Console.Write("What is your name? ");
-string name = Console.ReadLine();
-Console.Write("What is your username? (one word, no spaces!) ");
-string username = Console.ReadLine();
-User user = new User(name, username);
 
-Console.WriteLine();
-Console.WriteLine("To log out of your user profile, enter `log out`.");
 
-Console.WriteLine();
-Console.Write("Add a message (or `quit` to exit): ");
-
-string userInput = Console.ReadLine();
-List<User> users = new List<User>() { user };
-
-while (userInput.ToLower() != "quit")
+//Wrap in using statement to create db connection
+using (var context = new MessageLoggerContext())
 {
-    while (userInput.ToLower() != "log out")
-    {
-        user.Messages.Add(new Message(userInput));
+    Prompt.Output("welcome");
+    User user = null;
+    string userInput = "log out";
 
-        foreach (var message in user.Messages)
+    while (userInput.ToLower() != "quit")
+    {
+        //message creation
+        while (userInput.ToLower() != "log out")
         {
-            Console.WriteLine($"{user.Name} {message.CreatedAt:t}: {message.Content}");
+            userInput = AddMessage(context, user, userInput);
         }
 
-        Console.Write("Add a message: ");
-
+        //switching user
+        //new
+        Prompt.Output("newOrExisting");
         userInput = Console.ReadLine();
-        Console.WriteLine();
-    }
-
-    Console.Write("Would you like to log in a `new` or `existing` user? Or, `quit`? ");
-    userInput = Console.ReadLine();
-    if (userInput.ToLower() == "new")
-    {
-        Console.Write("What is your name? ");
-        name = Console.ReadLine();
-        Console.Write("What is your username? (one word, no spaces!) ");
-        username = Console.ReadLine();
-        user = new User(name, username);
-        users.Add(user);
-        Console.Write("Add a message: ");
-
-        userInput = Console.ReadLine();
-
-    }
-    else if (userInput.ToLower() == "existing")
-    {
-        Console.Write("What is your username? ");
-        username = Console.ReadLine();
-        user = null;
-        foreach (var existingUser in users)
+        if (userInput.ToLower() == "new")
         {
-            if (existingUser.Username == username)
-            {
-                user = existingUser;
-            }
-        }
-        
-        if (user != null)
-        {
-            Console.Write("Add a message: ");
+            user = CreateUser(context);
+            Prompt.Output("addMessage");
             userInput = Console.ReadLine();
         }
-        else
+
+        //existing
+        else if (userInput.ToLower() == "existing")
         {
-            Console.WriteLine("could not find user");
-            userInput = "quit";
+            user = ExistingUser(context);
 
+            if (user != null)
+            {
+                Prompt.Output("addMessage");
+                userInput = Console.ReadLine();
+            }
+            else
+            {
+                Prompt.Output("noUser");
+                userInput = "new";
+            }
         }
-    }
 
+    }
+    Prompt.Outro(context);
 }
 
-Console.WriteLine("Thanks for using Message Logger!");
-foreach (var u in users)
+
+static User CreateUser(MessageLoggerContext context)
 {
-    Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
+    Console.Write("What is your name? ");
+    string name = Console.ReadLine();
+    Console.Write("What is your username? (one word, no spaces!) ");
+    string username = Console.ReadLine();
+    User user = new User(name, username);
+    context.Users.Add(user);
+    context.SaveChanges();
+    user = context.Users.Single(u => u.Username == username);
+    return user;
+}
+static User ExistingUser(MessageLoggerContext context)
+{
+    Prompt.DisplayUsers(context);
+    Console.Write("What is your username? ");
+    string username = Console.ReadLine();
+    User user = null;
+    foreach (var existingUser in context.Users)
+    {
+        if (existingUser.Username == username)
+        {
+            user = existingUser;
+        }
+    }
+    return user;
+}
+static string AddMessage(MessageLoggerContext context, User user, string userInput)
+{
+    user.Messages.Add(new Message(userInput)); //add message to db, reference user from db instead
+    context.SaveChanges();
+    foreach (var message in user.Messages) //update to reference database
+    {
+        Console.WriteLine($"{user.Name} {message.CreatedAt:t}: {message.Content}");
+    }
+    Prompt.Output("addMessage");
+    userInput = Console.ReadLine();
+    Console.WriteLine();
+    return userInput;
 }
