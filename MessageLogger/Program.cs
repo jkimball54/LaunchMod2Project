@@ -55,6 +55,7 @@ using (var context = new MessageLoggerContext())
 
     }
     Prompt.Outro(context);
+    Prompt.Stats(context);
 }
 
 

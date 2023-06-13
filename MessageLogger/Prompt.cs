@@ -40,6 +40,7 @@ namespace MessageLogger
         }
         public static void Outro(MessageLoggerContext context)
         {
+            Console.WriteLine("Thanks for using Message Logger!");
             foreach (var u in context.Users.Include(u => u.Messages)) //in context instead
             {
                 Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
@@ -60,6 +61,17 @@ namespace MessageLogger
             {
                 Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
             }
+        }
+        public static void Stats(MessageLoggerContext context)
+        {
+            Console.WriteLine("Users Ordered by Message Count");
+            var userAll = context.Users.Include(u => u.Messages).OrderByDescending(u => u.Messages.Count);
+            foreach(var u in userAll)
+            {
+                Console.WriteLine($"{u.Username}: {u.Messages.Count}");
+            }
+            Console.WriteLine("Most Commonly used word");
+            Console.WriteLine("The Hour with the most messages");
         }
     }
 }
