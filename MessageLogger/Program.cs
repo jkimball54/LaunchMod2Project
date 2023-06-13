@@ -16,7 +16,6 @@ using (var context = new MessageLoggerContext())
     User user = null;
     string userInput = "log out";
 
-
     while (userInput.ToLower() != "quit")
     {
         //message creation
@@ -27,12 +26,12 @@ using (var context = new MessageLoggerContext())
 
         //switching user
         //new
-        Prompt.Output("neworexisting");
+        Prompt.Output("newOrExisting");
         userInput = Console.ReadLine();
         if (userInput.ToLower() == "new")
         {
             user = CreateUser(context);
-            Console.Write("Add a message: ");
+            Prompt.Output("addMessage");
             userInput = Console.ReadLine();
         }
 
@@ -43,22 +42,20 @@ using (var context = new MessageLoggerContext())
 
             if (user != null)
             {
-                Console.Write("Add a message: ");
+                Prompt.Output("addMessage");
                 userInput = Console.ReadLine();
             }
             else
             {
-                Console.WriteLine("could not find user");
-                Console.WriteLine("Lets create one for you!");
+                Prompt.Output("noUser");
                 userInput = "new";
             }
         }
 
     }
-
     Prompt.Outro(context);
-    
 }
+
 
 static User CreateUser(MessageLoggerContext context)
 {
@@ -95,7 +92,7 @@ static string AddMessage(MessageLoggerContext context, User user, string userInp
     {
         Console.WriteLine($"{user.Name} {message.CreatedAt:t}: {message.Content}");
     }
-    Console.Write("Add a message: ");
+    Prompt.Output("addMessage");
     userInput = Console.ReadLine();
     Console.WriteLine();
     return userInput;
