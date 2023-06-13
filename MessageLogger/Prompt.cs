@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -94,10 +95,42 @@ namespace MessageLogger
             }
             
         }
-        public static void HourOfMostMessages()
+
+        //I am not a fan of everything beyond this point
+        public static void HourOfMostMessages(MessageLoggerContext context)
         {
+            //count messages that occur between range of time (1 hour)
+            //move through each hour from first occurance to last occurence
+            Console.WriteLine("Hour of the Most Messages");
+            //for loop
+            var lastEverMessageHour = context.Messages.Max(m => m.CreatedAt.Hour) + 1;
+            for(var firstEverMessageHour = context.Messages.Min(m => m.CreatedAt.Hour); firstEverMessageHour < lastEverMessageHour; firstEverMessageHour++)
+            {
+                //var firstHour
+                var firstHour = firstEverMessageHour;
+                //var NextHour
+                var nextHour = firstEverMessageHour + 1;
+                //var totalMessages = context.Messages.Where(m.Date => m.Date < nextHour && m.Date >= firstHour).Count();
+                var totalMessages = context.Messages.Where(m => m.CreatedAt.Hour < nextHour && m.CreatedAt.Hour >= firstHour).Count();
+                Console.WriteLine($"{TwelveHourTime(firstHour)}: {totalMessages}");
+            }
 
         }
-
+        public static string TwelveHourTime(int hour)
+        {
+            if(hour < 12)
+            {
+                return $"{hour} AM";
+            }
+            else if(hour == 12)
+            {
+                return $"{hour} PM";
+            }
+            else
+            {
+                hour = hour - 12;
+                return $"{hour} PM";
+            }
+        }
     }
 }
