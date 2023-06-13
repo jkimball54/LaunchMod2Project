@@ -126,6 +126,10 @@ namespace MessageLogger
             {
                 return $"{hour} PM";
             }
+            else if(hour == 0)
+            {
+                return $"{hour} AM";
+            }
             else
             {
                 hour = hour - 12;
