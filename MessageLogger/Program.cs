@@ -42,6 +42,7 @@ using (var context = new MessageLoggerContext())
 
             if (user != null)
             {
+                Prompt.DisplayMessages(context, user);
                 Prompt.Output("addMessage");
                 userInput = Console.ReadLine();
             }
@@ -88,10 +89,7 @@ static string AddMessage(MessageLoggerContext context, User user, string userInp
 {
     user.Messages.Add(new Message(userInput)); //add message to db, reference user from db instead
     context.SaveChanges();
-    foreach (var message in user.Messages) //update to reference database
-    {
-        Console.WriteLine($"{user.Name} {message.CreatedAt:t}: {message.Content}");
-    }
+    Prompt.DisplayMessages(context, user);
     Prompt.Output("addMessage");
     userInput = Console.ReadLine();
     Console.WriteLine();

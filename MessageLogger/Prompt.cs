@@ -1,4 +1,7 @@
-﻿using System;
+﻿using MessageLogger.Data;
+using MessageLogger.Model;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -23,6 +26,39 @@ namespace MessageLogger
                     Console.WriteLine();
                     Console.Write("Add a message (or `quit` to exit): ");
                     break;
+                case "addMessage":
+                    Console.Write("Add a message: ");
+                    break;
+                case "newOrExisting":
+                    Console.WriteLine("(new/existing) New or existing user?: ");
+                    break;
+                case "noUser":
+                    Console.WriteLine("User not found! Lets create one for you.");
+                    break;
+
+            }
+        }
+        public static void Outro(MessageLoggerContext context)
+        {
+            foreach (var u in context.Users.Include(u => u.Messages)) //in context instead
+            {
+                Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
+            }
+        }
+        public static void DisplayUsers(MessageLoggerContext context)
+        {
+            Console.WriteLine("Current Users");
+            foreach (var u in context.Users) //in context instead
+            {
+                Console.WriteLine($"|{u.Id}| {u.Username}");
+            }
+        }
+        public static void DisplayMessages(MessageLoggerContext context, User currentUser)
+        {
+            var userAll = context.Users.Include(u => u.Messages).Single(u => u.Username == currentUser.Username);
+            foreach(var message in userAll.Messages)
+            {
+                Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
             }
         }
     }
