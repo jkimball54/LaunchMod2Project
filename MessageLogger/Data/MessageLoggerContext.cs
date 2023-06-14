@@ -23,5 +23,4 @@ namespace MessageLogger.Data
                 "Password=password123"
                 ).UseSnakeCaseNamingConvention();
     }
-
 }

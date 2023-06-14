@@ -10,8 +10,14 @@ namespace MessageLogger.Data
 {
     public class MessageLoggerDataSeeder
     {
-        public static void SeedUsersAndMessages(MessageLoggerContext context)
+        public static void SeedUsersAndMessages(MessageLoggerContext context, bool wipe)
         {
+            if(wipe)
+            {
+                context.Users.RemoveRange();
+                context.Messages.RemoveRange();
+                context.SaveChanges();
+            }
             if(!context.Users.Any())
             {
                 Message message1 = new Message("Hey!");

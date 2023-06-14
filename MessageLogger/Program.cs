@@ -11,6 +11,9 @@ using Spectre.Console;
 
 using (var context = new MessageLoggerContext())
 {
+    //Optionally wipe DB and then Seed with users/messages
+    MessageLoggerDataSeeder.SeedUsersAndMessages(context, true);
+
     Prompt.Output("welcome");
     User user = null;
     string userInput = Prompt.MainMenu();
