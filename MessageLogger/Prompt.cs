@@ -1,13 +1,7 @@
 ﻿using MessageLogger.Data;
 using MessageLogger.Model;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
+using Spectre.Console;
 
 namespace MessageLogger
 {
@@ -15,28 +9,32 @@ namespace MessageLogger
     {
         public static void Output(string prompt)
         {
-            switch(prompt)
+            switch (prompt)
             {
                 case "welcome":
-                    Console.WriteLine("Welcome to Message Logger!");
-                    Console.WriteLine();
-                    Console.WriteLine();
-                    break;
-                case "controls":
-                    Console.WriteLine("To log out of your user profile, enter `log out`.");
-                    Console.WriteLine();
-                    Console.Write("Add a message (or `quit` to exit): ");
+                    AnsiConsole.Write(
+                        new FigletText("Message Logger")
+                        .Centered()
+                        .Color(Color.Yellow));
+                    AnsiConsole.Progress()
+                                        .Start(ctx =>
+                                        {
+                                            // Define tasks
+                                            var task1 = ctx.AddTask("[green italic bold]Loading[/]");
+                                            var task2 = ctx.AddTask("[green italic bold]Connecting to Database[/]");
+
+                                            while (!ctx.IsFinished)
+                                            {
+                                                task1.Increment(1.5);
+                                                Thread.Sleep(10);
+                                                task2.Increment(0.5);
+                                            }
+                                        });
+                    Console.Clear();
                     break;
                 case "addMessage":
-                    Console.Write("Add a message: ");
+                    AnsiConsole.Markup("[bold invert grey]ADD A MESSAGE:[/] ");
                     break;
-                case "newOrExisting":
-                    Console.WriteLine("(new/existing) New or existing user?: ");
-                    break;
-                case "noUser":
-                    Console.WriteLine("User not found! Lets create one for you.");
-                    break;
-
             }
         }
         public static void Outro(MessageLoggerContext context)
@@ -58,8 +56,11 @@ namespace MessageLogger
         public static void DisplayMessages(MessageLoggerContext context, User currentUser)
         {
             Console.Clear();
+            var panel = new Panel($"[invert bold]MESSAGE LOGGER[/] [red]Logged in as:[/][yellow]{currentUser.Username}[/] [dim grey] Controls - Enter your message or type 'quit' to log out[/]");
+            panel.Expand();
+            AnsiConsole.Write(panel);
             var userAll = context.Users.Include(u => u.Messages).Single(u => u.Username == currentUser.Username);
-            foreach(var message in userAll.Messages)
+            foreach (var message in userAll.Messages)
             {
                 Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
             }
@@ -68,7 +69,7 @@ namespace MessageLogger
         {
             var userAll = context.Users.Include(u => u.Messages).OrderByDescending(u => u.Messages.Count);
             string builtString = null;
-            foreach(var u in userAll)
+            foreach (var u in userAll)
             {
                 builtString += $"{u.Username}: {u.Messages.Count}\n";
             }
@@ -78,15 +79,15 @@ namespace MessageLogger
         {
             List<string> allMessageStrings = context.Messages.Select(m => m.Content).ToList();
             List<string> singleWordList = new List<string>();
-            foreach(string messageString in allMessageStrings)
+            foreach (string messageString in allMessageStrings)
             {
                 var splitString = messageString.Split(" ");
                 singleWordList.AddRange(splitString);
             }
             string builtString = null;
-            foreach(string word in singleWordList.Distinct())
+            foreach (string word in singleWordList.Distinct())
             {
-                if(singleWordList.Where(w => w == word).Count() < minUsageNum)
+                if (singleWordList.Where(w => w == word).Count() < minUsageNum)
                 {
                     continue;
                 }
@@ -106,7 +107,7 @@ namespace MessageLogger
             //for loop
             var lastEverMessageHour = context.Messages.Max(m => m.CreatedAt.Hour) + 1;
             string builtString = null;
-            for(var firstEverMessageHour = context.Messages.Min(m => m.CreatedAt.Hour); firstEverMessageHour < lastEverMessageHour; firstEverMessageHour++)
+            for (var firstEverMessageHour = context.Messages.Min(m => m.CreatedAt.Hour); firstEverMessageHour < lastEverMessageHour; firstEverMessageHour++)
             {
                 //var firstHour
                 var firstHour = firstEverMessageHour;
@@ -120,15 +121,15 @@ namespace MessageLogger
         }
         public static string TwelveHourTime(int hour)
         {
-            if(hour < 12)
+            if (hour < 12)
             {
                 return $"{hour} AM";
             }
-            else if(hour == 12)
+            else if (hour == 12)
             {
                 return $"{hour} PM";
             }
-            else if(hour == 0)
+            else if (hour == 0)
             {
                 return $"{hour} AM";
             }

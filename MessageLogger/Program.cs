@@ -39,7 +39,7 @@ using (var context = new MessageLoggerContext())
                 statTable.Border(TableBorder.Double);
                 statTable.Title("Message Logger Statistics");
                 statTable.AddColumn(new TableColumn("[yellow]User Message Highscores[/]").Centered());
-                statTable.AddColumn(new TableColumn("[yellow]Most Common Word[/]").Centered());
+                statTable.AddColumn(new TableColumn("[yellow]Most Common Words[/]").Centered());
                 statTable.AddColumn(new TableColumn("[yellow]Hour of Most Messages[/]").Centered());
                 statTable.AddRow(
                                 Prompt.UsersOrderedByMessageCount(context), 
@@ -59,12 +59,14 @@ using (var context = new MessageLoggerContext())
     AnsiConsole.Write(
         new FigletText("Thank you!")
         .Centered()
-        .Color(Color.White));
+        .Color(Color.Red));
 }
 
 static User CreateUser(MessageLoggerContext context)
 {
-
+    var panel = new Panel("[invert bold]MESSAGE LOGGER[/] [red]Create New User[/] [dim grey] Controls - Type your responses[/]");
+    panel.Expand();
+    AnsiConsole.Write(panel);
     Console.Write("What is your name? ");
     string name = Console.ReadLine();
     Console.Write("What is your username? (one word, no spaces!) ");
@@ -78,6 +80,9 @@ static User CreateUser(MessageLoggerContext context)
 }
 static User ExistingUser(MessageLoggerContext context)
 {
+    var panel = new Panel("[invert bold]MESSAGE LOGGER[/] [red]Existing User[/] [dim grey] Controls - Select a user from the menu with the arrow keys[/]");
+    panel.Expand();
+    AnsiConsole.Write(panel);
     User user = null;
     var username = AnsiConsole.Prompt(
         new SelectionPrompt<string>()
@@ -101,9 +106,11 @@ static void AddMessage(MessageLoggerContext context, User user, string userInput
 }
 static string MainMenu()
 {
+    var panel = new Panel("[invert bold]MESSAGE LOGGER[/] [red]Main Menu[/] [dim grey] Controls - Select an option from the menu with the arrow keys[/]");
+    panel.Expand();
+    AnsiConsole.Write(panel);
     string selection = AnsiConsole.Prompt(
         new SelectionPrompt<string>()
-        .Title("Please select an [red]option[/].")
         .PageSize(4)
         .AddChoices(new[]
         {
@@ -112,6 +119,6 @@ static string MainMenu()
             "Statistics",
             "Quit"
         }));
-
+    Console.Clear();
     return selection;
 }
