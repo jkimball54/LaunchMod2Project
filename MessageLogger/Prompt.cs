@@ -56,10 +56,10 @@ namespace MessageLogger
                 .PageSize(4)
                 .AddChoices(new[]
                 {
-            "New User",
-            "Existing User",
-            "Statistics",
-            "Quit"
+                 "New User",
+                 "Existing User",
+                 "Statistics",
+                 "Quit"
                 }));
             Console.Clear();
             return selection;
@@ -116,22 +116,16 @@ namespace MessageLogger
         //Linq to find the hours of highest activity
         public static string HourOfMostMessages(MessageLoggerContext context)
         {
-
-
             //count messages that occur between range of time (1 hour)
             //move through each hour from first occurance to last occurence
-            //for loop
-            var lastEverMessageHour = context.Messages.Max(m => m.CreatedAt.Hour) + 1;
+            var finalHour = context.Messages.Max(m => m.CreatedAt.Hour) + 1;
             string builtString = null;
-            for (var firstEverMessageHour = context.Messages.Min(m => m.CreatedAt.Hour); firstEverMessageHour < lastEverMessageHour; firstEverMessageHour++)
+            for (var firstHour = context.Messages.Min(m => m.CreatedAt.Hour); firstHour < finalHour; firstHour++)
             {
-                //var firstHour
-                var firstHour = firstEverMessageHour;
-                //var NextHour
-                var nextHour = firstEverMessageHour + 1;
-                //var totalMessages = context.Messages.Where(m.Date => m.Date < nextHour && m.Date >= firstHour).Count();
-                var totalMessages = context.Messages.Where(m => m.CreatedAt.Hour < nextHour && m.CreatedAt.Hour >= firstHour).Count();
-                builtString += $"{TwelveHourTime(firstHour)}: {totalMessages}\n";
+                var currentHour = firstHour;
+                var nextHour = firstHour + 1;
+                var totalMessages = context.Messages.Where(m => m.CreatedAt.Hour < nextHour && m.CreatedAt.Hour >= currentHour).Count();
+                builtString += $"{TwelveHourTime(currentHour)}: {totalMessages}\n";
             }
             return builtString;
         }
