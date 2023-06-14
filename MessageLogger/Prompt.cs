@@ -7,6 +7,7 @@ namespace MessageLogger
 {
     public class Prompt
     {
+        //Switch statement to output different prompts for user
         public static void Output(string prompt)
         {
             switch (prompt)
@@ -35,24 +36,35 @@ namespace MessageLogger
                 case "addMessage":
                     AnsiConsole.Markup("[bold invert grey]ADD A MESSAGE:[/] ");
                     break;
+                case "thankYou":
+                    Console.Clear();
+                    AnsiConsole.Write(
+                        new FigletText("Thank you!")
+                        .Centered()
+                        .Color(Color.Red));
+                    break;
             }
         }
-        public static void Outro(MessageLoggerContext context)
+        //Renders Main menu, returns menu selection
+        public static string MainMenu()
         {
-            Console.WriteLine("Thanks for using Message Logger!");
-            foreach (var u in context.Users.Include(u => u.Messages)) //in context instead
-            {
-                Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
-            }
+            var panel = new Panel("[invert bold]MESSAGE LOGGER[/] [red]Main Menu[/] [dim grey] Controls - Select an option from the menu with the arrow keys[/]");
+            panel.Expand();
+            AnsiConsole.Write(panel);
+            string selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                .PageSize(4)
+                .AddChoices(new[]
+                {
+            "New User",
+            "Existing User",
+            "Statistics",
+            "Quit"
+                }));
+            Console.Clear();
+            return selection;
         }
-        public static void DisplayUsers(MessageLoggerContext context)
-        {
-            Console.WriteLine("Current Users");
-            foreach (var u in context.Users) //in context instead
-            {
-                Console.WriteLine($"|{u.Id}| {u.Username}");
-            }
-        }
+        //Displays all previous user messages when logged into an existing user
         public static void DisplayMessages(MessageLoggerContext context, User currentUser)
         {
             Console.Clear();
@@ -65,6 +77,8 @@ namespace MessageLogger
                 Console.WriteLine($"{message.CreatedAt:t}: {message.Content}");
             }
         }
+        
+        //Linq to get Users sorted by message count
         public static string UsersOrderedByMessageCount(MessageLoggerContext context)
         {
             var userAll = context.Users.Include(u => u.Messages).OrderByDescending(u => u.Messages.Count);
@@ -75,6 +89,7 @@ namespace MessageLogger
             }
             return builtString;
         }
+        //Linq to find the most common word
         public static string MostCommonWord(MessageLoggerContext context, int minUsageNum)
         {
             List<string> allMessageStrings = context.Messages.Select(m => m.Content).ToList();
@@ -98,10 +113,11 @@ namespace MessageLogger
             }
             return builtString;
         }
-
-        //I am not a fan of everything beyond this point
+        //Linq to find the hours of highest activity
         public static string HourOfMostMessages(MessageLoggerContext context)
         {
+
+
             //count messages that occur between range of time (1 hour)
             //move through each hour from first occurance to last occurence
             //for loop
@@ -119,24 +135,55 @@ namespace MessageLogger
             }
             return builtString;
         }
+        //Bit of code golf using ternary operator for getting 12hour time from 24hour time
         public static string TwelveHourTime(int hour)
         {
-            if (hour < 12)
+            return 
+                (
+                hour < 12 ? $"{hour} AM":
+                hour == 12 ? $"{hour} PM": 
+                hour == 0 ? $"{hour +12} AM":
+                $"{hour - 12} PM"
+                );
+        }
+        //Renders stats table with the three linq query statistics displayed
+        public static void StatsTable(MessageLoggerContext context)
+        {
+            Console.Clear();
+            var statTable = new Table();
+            statTable.Border(TableBorder.Double);
+            statTable.Title("Message Logger Statistics");
+            statTable.AddColumn(new TableColumn("[yellow]User Message Highscores[/]").Centered());
+            statTable.AddColumn(new TableColumn("[yellow]Most Common Words[/]").Centered());
+            statTable.AddColumn(new TableColumn("[yellow]Hour of Most Messages[/]").Centered());
+            statTable.AddRow(
+                            Prompt.UsersOrderedByMessageCount(context),
+                            Prompt.MostCommonWord(context, 5),
+                            Prompt.HourOfMostMessages(context)
+                            );
+
+            AnsiConsole.Write(statTable);
+        }
+
+
+
+
+
+        //Depreciated Methods
+        public static void Outro(MessageLoggerContext context)
+        {
+            Console.WriteLine("Thanks for using Message Logger!");
+            foreach (var u in context.Users.Include(u => u.Messages)) //in context instead
             {
-                return $"{hour} AM";
+                Console.WriteLine($"{u.Name} wrote {u.Messages.Count} messages.");
             }
-            else if (hour == 12)
+        }
+        public static void DisplayUsers(MessageLoggerContext context)
+        {
+            Console.WriteLine("Current Users");
+            foreach (var u in context.Users) //in context instead
             {
-                return $"{hour} PM";
-            }
-            else if (hour == 0)
-            {
-                return $"{hour} AM";
-            }
-            else
-            {
-                hour = hour - 12;
-                return $"{hour} PM";
+                Console.WriteLine($"|{u.Id}| {u.Username}");
             }
         }
     }

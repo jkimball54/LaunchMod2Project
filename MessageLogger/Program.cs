@@ -9,13 +9,11 @@ using Npgsql.Replication;
 using Spectre.Console;
 
 
-
-//Wrap in using statement to create db connection
 using (var context = new MessageLoggerContext())
 {
     Prompt.Output("welcome");
     User user = null;
-    string userInput = MainMenu();
+    string userInput = Prompt.MainMenu();
 
     while(userInput != "Quit")
     {
@@ -25,41 +23,24 @@ using (var context = new MessageLoggerContext())
                 user = CreateUser(context);
                 AddMessage(context, user, userInput);
                 Console.Clear();
-                userInput = MainMenu();
+                userInput = Prompt.MainMenu();
                 break;
             case "Existing User":
                 user = ExistingUser(context);
                 AddMessage(context, user, userInput);
                 Console.Clear();
-                userInput = MainMenu();
+                userInput = Prompt.MainMenu();
                 break;
             case "Statistics":
-                Console.Clear();
-                var statTable = new Table();
-                statTable.Border(TableBorder.Double);
-                statTable.Title("Message Logger Statistics");
-                statTable.AddColumn(new TableColumn("[yellow]User Message Highscores[/]").Centered());
-                statTable.AddColumn(new TableColumn("[yellow]Most Common Words[/]").Centered());
-                statTable.AddColumn(new TableColumn("[yellow]Hour of Most Messages[/]").Centered());
-                statTable.AddRow(
-                                Prompt.UsersOrderedByMessageCount(context), 
-                                Prompt.MostCommonWord(context, 5),
-                                Prompt.HourOfMostMessages(context)
-                                );
-                
-                AnsiConsole.Write(statTable);
-                Console.Write("Press any key to return to main menu...");
+                Prompt.StatsTable(context);
+                AnsiConsole.Markup("[grey slowblink]Press any key to return to main menu...[/]");
                 Console.ReadKey();
                 Console.Clear();
-                userInput = MainMenu();
+                userInput = Prompt.MainMenu();
                 break;
         }
     }
-    Console.Clear();
-    AnsiConsole.Write(
-        new FigletText("Thank you!")
-        .Centered()
-        .Color(Color.Red));
+    Prompt.Output("thankYou");
 }
 
 static User CreateUser(MessageLoggerContext context)
@@ -103,22 +84,4 @@ static void AddMessage(MessageLoggerContext context, User user, string userInput
         user.Messages.Add(new Message(userInput)); //add message to db, reference user from db instead
         context.SaveChanges();
     }
-}
-static string MainMenu()
-{
-    var panel = new Panel("[invert bold]MESSAGE LOGGER[/] [red]Main Menu[/] [dim grey] Controls - Select an option from the menu with the arrow keys[/]");
-    panel.Expand();
-    AnsiConsole.Write(panel);
-    string selection = AnsiConsole.Prompt(
-        new SelectionPrompt<string>()
-        .PageSize(4)
-        .AddChoices(new[]
-        {
-            "New User",
-            "Existing User",
-            "Statistics",
-            "Quit"
-        }));
-    Console.Clear();
-    return selection;
 }
