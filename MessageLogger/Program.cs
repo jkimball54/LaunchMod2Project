@@ -13,57 +13,58 @@ using Spectre.Console;
 //Wrap in using statement to create db connection
 using (var context = new MessageLoggerContext())
 {
-    
     Prompt.Output("welcome");
     User user = null;
-    string userInput = "log out";
+    string userInput = MainMenu();
 
-    while (userInput.ToLower() != "quit")
+    while(userInput != "Quit")
     {
-        //message creation
-        while (userInput.ToLower() != "log out")
+        switch (userInput)
         {
-            userInput = AddMessage(context, user, userInput);
+            case "New User":
+                user = CreateUser(context);
+                AddMessage(context, user, userInput);
+                Console.Clear();
+                userInput = MainMenu();
+                break;
+            case "Existing User":
+                user = ExistingUser(context);
+                AddMessage(context, user, userInput);
+                Console.Clear();
+                userInput = MainMenu();
+                break;
+            case "Statistics":
+                Console.Clear();
+                var statTable = new Table();
+                statTable.Border(TableBorder.Double);
+                statTable.Title("Message Logger Statistics");
+                statTable.AddColumn(new TableColumn("[yellow]User Message Highscores[/]").Centered());
+                statTable.AddColumn(new TableColumn("[yellow]Most Common Word[/]").Centered());
+                statTable.AddColumn(new TableColumn("[yellow]Hour of Most Messages[/]").Centered());
+                statTable.AddRow(
+                                Prompt.UsersOrderedByMessageCount(context), 
+                                Prompt.MostCommonWord(context, 5),
+                                Prompt.HourOfMostMessages(context)
+                                );
+                
+                AnsiConsole.Write(statTable);
+                Console.Write("Press any key to return to main menu...");
+                Console.ReadKey();
+                Console.Clear();
+                userInput = MainMenu();
+                break;
         }
-
-        //switching user
-        //new
-        Prompt.Output("newOrExisting");
-        userInput = Console.ReadLine();
-        if (userInput.ToLower() == "new")
-        {
-            user = CreateUser(context);
-            Prompt.Output("addMessage");
-            userInput = Console.ReadLine();
-        }
-
-        //existing
-        else if (userInput.ToLower() == "existing")
-        {
-            user = ExistingUser(context);
-
-            if (user != null)
-            {
-                Prompt.DisplayMessages(context, user);
-                Prompt.Output("addMessage");
-                userInput = Console.ReadLine();
-            }
-            else
-            {
-                Prompt.Output("noUser");
-                userInput = "new";
-            }
-        }
-
     }
-    Prompt.Outro(context);
-    Prompt.UsersOrderedByMessageCount(context);
-    Prompt.MostCommonWord(context, 5);
-    Prompt.HourOfMostMessages(context);
+    Console.Clear();
+    AnsiConsole.Write(
+        new FigletText("Thank you!")
+        .Centered()
+        .Color(Color.White));
 }
 
 static User CreateUser(MessageLoggerContext context)
 {
+
     Console.Write("What is your name? ");
     string name = Console.ReadLine();
     Console.Write("What is your username? (one word, no spaces!) ");
@@ -73,6 +74,7 @@ static User CreateUser(MessageLoggerContext context)
     context.SaveChanges();
     user = context.Users.Single(u => u.Username == username);
     return user;
+
 }
 static User ExistingUser(MessageLoggerContext context)
 {
@@ -85,13 +87,31 @@ static User ExistingUser(MessageLoggerContext context)
         .AddChoices(context.Users.Select(u => u.Username).ToList()));
     return context.Users.Single(u => u.Username == username);
 }
-static string AddMessage(MessageLoggerContext context, User user, string userInput)
+static void AddMessage(MessageLoggerContext context, User user, string userInput)
 {
-    user.Messages.Add(new Message(userInput)); //add message to db, reference user from db instead
-    context.SaveChanges();
-    Prompt.DisplayMessages(context, user);
-    Prompt.Output("addMessage");
-    userInput = Console.ReadLine();
-    Console.WriteLine();
-    return userInput;
+    userInput = null;
+    while(userInput != "quit")
+    {
+        Prompt.DisplayMessages(context, user);
+        Prompt.Output("addMessage");
+        userInput = Console.ReadLine();
+        user.Messages.Add(new Message(userInput)); //add message to db, reference user from db instead
+        context.SaveChanges();
+    }
+}
+static string MainMenu()
+{
+    string selection = AnsiConsole.Prompt(
+        new SelectionPrompt<string>()
+        .Title("Please select an [red]option[/].")
+        .PageSize(4)
+        .AddChoices(new[]
+        {
+            "New User",
+            "Existing User",
+            "Statistics",
+            "Quit"
+        }));
+
+    return selection;
 }
